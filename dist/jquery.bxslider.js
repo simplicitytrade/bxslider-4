@@ -1097,31 +1097,48 @@
      *  - DOM event object
      */
     var onTouchStart = function(e) {
-      //disable slider controls while user is interacting with slides to avoid slider freeze that happens on touch devices when a slide swipe happens immediately after interacting with slider controls
-      slider.controls.el.addClass('disabled');
-
-      if (slider.working) {
-        e.preventDefault();
-        slider.controls.el.removeClass('disabled');
-      } else {
-        // record the original position when touch starts
-        slider.touch.originalPos = el.position();
-        var orig = e.originalEvent,
-        touchPoints = (typeof orig.changedTouches !== 'undefined') ? orig.changedTouches : [orig];
-        // record the starting touch x, y coordinates
-        slider.touch.start.x = touchPoints[0].pageX;
-        slider.touch.start.y = touchPoints[0].pageY;
-
-        if (slider.viewport.get(0).setPointerCapture) {
-          slider.pointerId = orig.pointerId;
-          slider.viewport.get(0).setPointerCapture(slider.pointerId);
+        //disable slider controls while user is interacting with slides to avoid slider freeze that happens on touch devices when a slide swipe happens immediately after interacting with slider controls
+        slider.controls.el.addClass('disabled');
+        if (slider.working) {
+            e.preventDefault();
+            slider.controls.el.removeClass('disabled');
+        } else {
+            // record the original position when touch starts
+            slider.touch.originalPos = el.position();
+            var orig = e.originalEvent;
+            var chromePointerEvents = typeof PointerEvent === 'function';
+            if (chromePointerEvents) {
+                if (orig.pointerId !== undefined) {
+                    var touchPoints = (typeof orig.changedTouches !== 'undefined') ? orig.changedTouches : [orig];
+                    // record the starting touch x, y coordinates
+                    slider.touch.start.x = touchPoints[0].pageX;
+                    slider.touch.start.y = touchPoints[0].pageY;
+                    if (slider.viewport.get(0).setPointerCapture) {
+                        slider.pointerId = orig.pointerId;
+                        slider.viewport.get(0).setPointerCapture(slider.pointerId);
+                    }
+                    // bind a "touchmove" event to the viewport
+                    slider.viewport.bind('touchmove MSPointerMove', onTouchMove);
+                    // bind a "touchend" event to the viewport
+                    slider.viewport.bind('touchend MSPointerUp pointerup', onTouchEnd);
+                    slider.viewport.bind('MSPointerCancel pointercancel', onPointerCancel);
+                }
+            } else {
+                var touchPoints = (typeof orig.changedTouches !== 'undefined') ? orig.changedTouches : [orig];
+                // record the starting touch x, y coordinates
+                slider.touch.start.x = touchPoints[0].pageX;
+                slider.touch.start.y = touchPoints[0].pageY;
+                if (slider.viewport.get(0).setPointerCapture) {
+                    slider.pointerId = orig.pointerId;
+                    slider.viewport.get(0).setPointerCapture(slider.pointerId);
+                }
+                // bind a "touchmove" event to the viewport
+                slider.viewport.bind('touchmove MSPointerMove', onTouchMove);
+                // bind a "touchend" event to the viewport
+                slider.viewport.bind('touchend MSPointerUp pointerup', onTouchEnd);
+                slider.viewport.bind('MSPointerCancel pointercancel', onPointerCancel);
+            }
         }
-        // bind a "touchmove" event to the viewport
-        slider.viewport.bind('touchmove MSPointerMove pointermove', onTouchMove);
-        // bind a "touchend" event to the viewport
-        slider.viewport.bind('touchend MSPointerUp pointerup', onTouchEnd);
-        slider.viewport.bind('MSPointerCancel pointercancel', onPointerCancel);
-      }
     };
 
     /**
